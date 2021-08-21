@@ -35,7 +35,7 @@ var prototipoCesped = {x: 0, y: 0};
 
 // Botones
 var botonReiniciar = {
-    x: canvas.width - 70,
+    x: canvas.width - 90,
     y: canvas.height - 70,
     width: 60,
     height: 60,
@@ -209,6 +209,7 @@ var update, movimientoVaca, movimientoCerdo, movimientoPollo, movimientoOveja; /
 var cantidadVacas, cantidadCerdos, cantidadPollos;
 var tipoMovimiento, menuPrincipal = true;
 var musica, sonandoJuego = false;
+var densidadCesped = 5;    // Densidad del cesped: 1=alta, 20=baja, default=5
 
 // -------------------------------------------------------------------------------------------------------------------
 //                                                  EVENTOS
@@ -887,13 +888,15 @@ function ovejasIA(){
 // -------------------------------------------------------------------------------------------------------------------
 // Funcion para generar el cesped del fondo
 function generarCesped(){
+    // Limpiamos los valores generados anteriormente
+    cespedTipos = [];
     // Basicamente esto actua como matriz de de los 23x25 cuadros que hay en el fondo
-    var posX = 32, posY = 32;
-    for(var y=0; y < 25; y++){
+    var posX = 32, posY = 160;
+    for(var y=0; y < 20; y++){
         posX = 32;  // Resetamos la posicion de posX por cada posY que varia
         for(var x=0; x < 23; x++){
             // Preguntamos si dibujamos cesped el cuadro posX y posY
-            var dibujarCesped = aleatorio(1,5);
+            var dibujarCesped = aleatorio(1,densidadCesped);
             if(dibujarCesped == 1){
                 // Creamos un nuevo objeto tipo cesped
                 var nuevoCesped = Object.create(prototipoCesped);
@@ -917,7 +920,7 @@ function clicPantalla(evento){
     //console.log(clicX + " - "+clicY);
 
     // Boton reiniciar
-    if(((clicX > 660 && clicX < 700)) && (clicY > 668 && clicY < 700)) {
+    if(((clicX > 650 && clicX < 690)) && (clicY > 668 && clicY < 700)) {
         reiniciarJuego();
         presionarBoton.play();
     }
