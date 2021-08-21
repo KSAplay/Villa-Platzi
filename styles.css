@@ -1,0 +1,26 @@
+*{
+    margin: 0;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+}
+
+html{
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale
+}
+
+body{
+    font-family: 'Lato', sans-serif;
+    color: #F5F4F6;
+    width: 100%;
+    height: 100vh;
+    background: #27AE60;
+    overflow: hidden;
+}
+
+.container{
+    text-align: center;
+    border: 0px 5px 0px 5px;
+    border-color: #000;
+}
