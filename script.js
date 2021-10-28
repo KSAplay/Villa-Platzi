@@ -25,15 +25,13 @@ var tecla = {
 };
 
 // Imagen de fondo
-var fondo = {
-    src: "img/fondo.png"
-};
+var fondo = { src: "img/fondo.png" };
 
 // Tipos de Cesped
 var cespedTipos = [];
 var prototipoCesped = {x: 0, y: 0};
 
-// Botones
+// ----------- Botones ------------
 var botonReiniciar = {
     x: canvas.width - 90,
     y: canvas.height - 70,
@@ -42,7 +40,23 @@ var botonReiniciar = {
     src: "img/boton-reiniciar.png"
 };
 
-// Personaje
+var botonMusica = {
+    x: canvas.width/2,
+    y: 10,
+    width: 40,
+    height: 40,
+    src: "img/boton-musica.png"
+};
+
+var botonMusicaMuteada = {
+    x: canvas.width/2,
+    y: 10,
+    width: 40,
+    height: 40,
+    src: "img/boton-musica-muteada.png"
+};
+
+// ---------- Personaje ------------
 var personaje = {
     x: (canvas.width/2)-40,
     y: (canvas.height/2)-40,
@@ -59,7 +73,7 @@ var personaje = {
         abajo_derecha_izquierda: ""
     }
 }
-
+// ----------- Animales ------------
 // Vacas
 var vacas = [];
 var prototipoVaca = {
@@ -159,6 +173,14 @@ personaje.imagen.src = personaje.src.abajo;
 botonReiniciar.imagen = new Image();
 botonReiniciar.imagen.src = botonReiniciar.src;
 
+// Boton de Musica
+botonMusica.imagen = new Image();
+botonMusica.imagen.src = botonMusica.src;
+
+// Boton de Musica
+botonMusicaMuteada.imagen = new Image();
+botonMusicaMuteada.imagen.src = botonMusicaMuteada.src;
+
 // -------------------------------------------------------------------------------------------------------------------
 //                                                       AUDIOS
 // -------------------------------------------------------------------------------------------------------------------
@@ -180,16 +202,6 @@ musica3.src = "sounds/background-theme3.wav";
 musica3.loop = true;
 musica3.volume = 0.3;
 
-// Mugido de Vaca
-var mugido = new Audio();
-//mugido.src = "sounds/mugido-vaca.wav";
-mugido.volume = 0.3;
-
-// Gruñido de Cerdo
-var gruñido = new Audio();
-//gruñido.src = "sounds/gruñido-cerdo.wav";
-gruñido.volume = 0.3;
-
 // Boton Presionado
 var presionarBoton = new Audio();
 presionarBoton.src = "sounds/selection.wav";
@@ -208,7 +220,7 @@ var map = {};   // Para las teclas que se presionan
 var update, movimientoVaca, movimientoCerdo, movimientoPollo, movimientoOveja; // Son las variables de las funciones que se repiten
 var cantidadVacas, cantidadCerdos, cantidadPollos;
 var tipoMovimiento, menuPrincipal = true;
-var musica, sonandoJuego = false;
+var musica, sonandoJuego = false, musica_muteada = false;   // Variables relacionadas a la musica del juego
 var densidadCesped = 5;    // Densidad del cesped: 1=alta, 20=baja, default=5
 
 // -------------------------------------------------------------------------------------------------------------------
@@ -293,6 +305,8 @@ function inicio(){
     generarCesped();
     // Ponemos que el juego está en el menu principal
     menuPrincipal = true;
+    // Establecemos que la musica no está muteada
+    musica_muteada = false;
     // Establecemos los datos inciales
     establecerVacas();
     establecerCerdos();
@@ -337,7 +351,7 @@ function reiniciarJuego(){
     inicio();
 }
 
-// Funcion repetitiva
+// Funcion repetitiva (IMPORTANTE PARA EL FUNCIONAMIENTO DEL JUEGO)
 function bucle(){
     // Limpiamos en cada reinicio del bucle
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -349,7 +363,10 @@ function bucle(){
     }
     // Verificamos si estamos en el menu principal
     if(menuPrincipal){
+        // Dibujamos la interfaz del juego cuando está en el menú principal
 
+        // Incluimos al personaje principal en el menu
+        ctx.drawImage(personaje.imagen, personaje.x, personaje.y);
     } else {
         // Verificamos si la musica de juego no esta sonando para reproducirlo y cambiar la variable a true
         if(!sonandoJuego){
@@ -381,12 +398,20 @@ function bucle(){
         for(var i=0; i < cantidadVacas; i++){
             ctx.drawImage(vacas[i].imagen, vacas[i].x, vacas[i].y);
         }
-        // Dibujamos el boton de reiniciar
-        ctx.drawImage(botonReiniciar.imagen, botonReiniciar.x,botonReiniciar.y, botonReiniciar.width, botonReiniciar.height);
+
+        // Dibujamos al personaje (al final de los otros objetos para que esté por encima de estos, a excepcion de la interfaz)
+        ctx.drawImage(personaje.imagen, personaje.x, personaje.y);
+
+        // Dibujamos la interfaz del juego cuando se está jugando
+        ctx.drawImage(botonReiniciar.imagen, botonReiniciar.x,botonReiniciar.y);    // Boton Reiniciar
+        
+        if(musica_muteada){
+            ctx.drawImage(botonMusicaMuteada.imagen, botonMusicaMuteada.x,botonMusicaMuteada.y);
+        } else {
+            ctx.drawImage(botonMusica.imagen, botonMusica.x,botonMusica.y);
+        }
+
     }
-    // Dibujamos al personaje (al final de los otros objetos para que esté por encima de estos)
-    ctx.drawImage(personaje.imagen, personaje.x, personaje.y);
-    // Dibujamos los arboles
 
 }
 // -------------------------------------------------------------------------------------------------------------------
@@ -917,11 +942,37 @@ function generarCesped(){
 function clicPantalla(evento){
     var clicX = evento.layerX;
     var clicY = evento.layerY;
-    //console.log(clicX + " - "+clicY);
+    //console.log("X: " + clicX + " - Y: "+clicY);
 
     // Boton reiniciar
     if(((clicX > 650 && clicX < 690)) && (clicY > 668 && clicY < 700)) {
         reiniciarJuego();
+        presionarBoton.play();
+    }
+    // Boton musica
+    if(((clicX > 364 && clicX < 410)) && (clicY > 15 && clicY < 51)) {
+        if(musica_muteada == false){
+            if(musica == 1) {
+                musica1.pause();
+                musica1.currentTime = 0;
+            } else if(musica == 2){
+                musica2.pause();
+                musica2.currentTime = 0;
+            } else {
+                musica3.pause();
+                musica3.currentTime = 0;
+            }
+            musica_muteada = true;
+        } else {
+            if(musica == 1) {
+                musica1.play();
+            } else if(musica == 2){
+                musica2.play();
+            } else {
+                musica3.play();
+            }
+            musica_muteada = false;
+        }
         presionarBoton.play();
     }
 }
