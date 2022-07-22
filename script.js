@@ -389,7 +389,7 @@ canvas.addEventListener("mousemove", movimientoMouse);
 // -------------------------------------------------------------------------------------------------------------------
 //                                               FUNCIONES PRINCIPALES
 // -------------------------------------------------------------------------------------------------------------------
-// -------------- Funcion inicial 
+// -------------- Funcion inicial --------------
 function inicio(){
     // Ajustamos el tamaño de la ventana al canvas
     resize();
@@ -415,7 +415,7 @@ function inicio(){
     movimientoOveja = setInterval(ovejasIA, 300);
 }
 
-// Funcion de reinicio
+// -------------- Funcion de reinicio --------------
 function reiniciarJuego(){
     // Detenemos la musica
     if(musica == 1) {
@@ -447,7 +447,8 @@ function reiniciarJuego(){
     inicio();
 }
 
-// Funcion repetitiva (IMPORTANTE PARA EL FUNCIONAMIENTO DEL JUEGO)
+// -------------- Funcion repetitiva --------------
+// (IMPORTANTE PARA EL FUNCIONAMIENTO DEL JUEGO)
 function bucle(){
     // Limpiamos en cada reinicio del bucle
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1230,7 +1231,7 @@ function generarCesped(){
 function clicPantalla(evento){
     var clicX = evento.layerX;
     var clicY = evento.layerY;
-    //console.log("Clic X: " + clicX + " - Y: "+clicY);
+    console.log("Clic X: " + clicX + " - Y: "+clicY);
 
     // Boton reiniciar
     if((clicX > 644 && clicX < 691) && (clicY > 660 && clicY < 713) && !menuPrincipal) {
@@ -1297,8 +1298,8 @@ function resize(){
     canvas.height = canvas_height;
 
     canvas.style.height = ""+window_height+"px";
-    //console.log(canvas.width);
-    //console.log(canvas.height);
+    console.log(canvas.width);
+    console.log(canvas.height);
 }
 
 // Cuando el mouse está dentro de un botón
