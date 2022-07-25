@@ -8,7 +8,7 @@ const ctx = canvas.getContext('2d');
 var window_width = window.innerWidth; // Anchura de la ventana
 var window_height = window.innerHeight; // Altura de la ventana
 var canvas_width = 800; // Anchura de la imagen utilizada de fondo
-var canvas_height = 800; // Altura de la imagen utilizada de fondo
+var canvas_height = window_height; // Altura de la imagen utilizada de fondo
 
 canvas.width = canvas_width;
 canvas.height = canvas_height;
@@ -36,43 +36,69 @@ var tecla = {
 var fondo = { src: "img/fondo.png" };
 
 // Imagen del titulo
-var titulo = { src: "img/villaPlatzi.png" };
+var titulo = {
+    x: 180,
+    y: window_height/8,
+    width: 451.7,
+    height: 91.8,
+    src: "img/villaPlatzi.png"
+};
 
 // Imagen de los botones W-A-S-D
-var botonesWASD = { src: "img/botonesWASD.png" };
+var botonesWASD = {
+    x: 220,
+    y:  window_height/2,
+    width: 139.4,
+    height: 91.8,
+    src: "img/botonesWASD.png"
+};
 
 // Imagen del boton E
-var botonE = { src: "img/botonE.png" };
+var botonE = {
+    x: 270,
+    y: window_height - window_height/3.5,
+    width: 46.2,
+    height: 45.3,
+    src: "img/botonE.png"
+};
 
 // ----------- Botones ------------
 var botonReiniciar = {
-    x: canvas.width - 90,
-    y: canvas.height - 70,
+    x: canvas_width - 90,
+    y: window_height - 70,
     width: 60,
     height: 60,
     src: "img/boton-reiniciar.png"
 };
 
 var botonMusica = {
-    x: canvas.width - 90,
-    y: 10,
-    width: 40,
-    height: 40,
+    x: canvas_width - 90,
+    y: 15,
+    width: 60,
+    height: 60,
     src: "img/boton-musica.png"
 };
 
 var botonMusicaMuteada = {
-    x: canvas.width - 90,
-    y: 10,
-    width: 40,
-    height: 40,
+    x: canvas_width - 90,
+    y: 15,
+    width: 60,
+    height: 60,
     src: "img/boton-musica-muteada.png"
+};
+
+var panelFinal = {
+    x: canvas_width - 90,
+    y: 15,
+    width: 266,
+    height: 165,
+    src: "img/panelFinal.png"
 };
 
 // ---------- Personaje ------------
 var personaje = {
-    x: (canvas.width/2) - 40,
-    y: (canvas.height/2) - 120,
+    x: (canvas_width/2) - 40,
+    y: (window_height/2) - 120,
     width: 80,
     height: 80,
     src: {
@@ -224,6 +250,10 @@ botonMusica.imagen.src = botonMusica.src;
 botonMusicaMuteada.imagen = new Image();
 botonMusicaMuteada.imagen.src = botonMusicaMuteada.src;
 
+// Panel de Fin de Juego
+panelFinal.imagen = new Image();
+panelFinal.imagen.src = panelFinal.src;
+
 // -------------------------------------------------------------------------------------------------------------------
 //                                                       AUDIOS
 // -------------------------------------------------------------------------------------------------------------------
@@ -261,16 +291,17 @@ subirPuntaje.volume = 0.7;
 const pasoPersonaje = 10;  // Distancia de pixeles que recorrerá el personaje
 const pasoVaca = 10, pasoCerdo = 10, pasoPollo = 10, pasoOveja = 10; // Distancia de pixeles que caminará los animales
 
-const FPS = 100;    // Frames por segundo establecido (se usará para la repetición de la función del bucle)
+const FPS = 120;    // Frames por segundo establecido (se usará para la repetición de la función del bucle)
 var map = {};   // Para las teclas que se presionan
 var update, movimientoVaca, movimientoCerdo, movimientoPollo, movimientoOveja; // Son las variables de las funciones que se repiten
 var cantidadVacas, cantidadCerdos, cantidadPollos;
 var tipoMovimiento, menuPrincipal = true;
 var musica, sonandoJuego = false, musica_muteada = false;   // Variables relacionadas a la musica del juego
 var densidadCesped = 3;    // Densidad del cesped: 1=alta, 20=baja, default=5
-var puntaje = 0, exp = 5, personajeCerca = false;   // Variables relacionadas al juego
+var puntaje = 0, puntajeAnterior = 0, exp = 5, personajeCerca = false, tiempo, finDelJuego = false;   // Variables relacionadas al juego
 var distanciaBotones = 70;  // La distancia que hay en los botones de la parte superior para no tapar a los animales
 var tiempoEstadoEXP = 700; dificultad = 20;     // Dificultad del juego, en el que aparecen las exclamaciones: 50=facil, 25=normal, 10=dificil
+var tiempo, finDelJuego = false;
 
 // -------------------------------------------------------------------------------------------------------------------
 //                                                  EVENTOS
@@ -386,6 +417,8 @@ window.addEventListener("resize", resize);
 canvas.addEventListener("mousedown", clicPantalla);
 canvas.addEventListener("mousemove", movimientoMouse);
 
+
+
 // -------------------------------------------------------------------------------------------------------------------
 //                                               FUNCIONES PRINCIPALES
 // -------------------------------------------------------------------------------------------------------------------
@@ -408,11 +441,15 @@ function inicio(){
     musica3.play();
     // Establecemos el bucle del juego
     update = setInterval(bucle, 1000/FPS);
+    // Establecemos el bucle del tiempo:
+    counterDown = setInterval(timer, 1000);
     // Establecemos el bucle para el movimiento de los animales
     movimientoVaca = setInterval(vacasIA, 400);
     movimientoCerdo = setInterval(cerdosIA, 300);
     movimientoPollo = setInterval(pollosIA, 200);
     movimientoOveja = setInterval(ovejasIA, 300);
+    // Establecemos el contador para el timer
+    tiempo = 60;
 }
 
 // -------------- Funcion de reinicio --------------
@@ -428,16 +465,20 @@ function reiniciarJuego(){
         musica3.pause();
         musica3.currentTime = 0;
     }
+    musica = 3;
     // Establecemos que la musica de juego ya no esta sonando
     sonandoJuego = false;
     // Reestalecemos el puntaje a 0
     puntaje = 0;
+    // Cambiamos la variable de Fin del Juego
+    finDelJuego = false;
     // Detenemos las funciones en bucle;
     clearInterval(update);
     clearInterval(movimientoVaca);
     clearInterval(movimientoCerdo);
     clearInterval(movimientoPollo);
     clearInterval(movimientoOveja);
+    clearInterval(counterDown);
     // Reiniciamos la posicion del personaje y su imagen
     personaje.x = (canvas.width/2) - 40;
     personaje.y = (canvas.height/2) - 120,
@@ -461,17 +502,24 @@ function bucle(){
     // Verificamos si estamos en el menu principal
     if(menuPrincipal){
         // Dibujamos la interfaz del juego cuando está en el menú principal
+            if(musica_muteada){
+                ctx.drawImage(botonMusicaMuteada.imagen,botonMusicaMuteada.x,botonMusicaMuteada.y);  // Boton Musica muteada
+            } else {
+                ctx.drawImage(botonMusica.imagen,botonMusica.x,botonMusica.y);   // Boton Musica sonando
+            }
             // - Titulo:
-            ctx.drawImage(titulo.imagen, 180, 120);
+            ctx.drawImage(titulo.imagen, titulo.x, titulo.y);
             // - Botones WASD:
-            ctx.drawImage(botonesWASD.imagen, 220, 410);
+            ctx.drawImage(botonesWASD.imagen, botonesWASD.x, botonesWASD.y);
             // - Boton E:
-            ctx.drawImage(botonE.imagen, 270, 550)
+            ctx.drawImage(botonE.imagen, botonE.x, botonE.y)
             // Explicacion de los botones
             ctx.fillStyle="white";
             ctx.font="30px VT323";
-            ctx.fillText(" ->  Para moverse", 390, 470);
-            ctx.fillText(" ->  Para seleccionar", 345, 580);
+            ctx.fillText(" ->  Para moverse", canvas_width/2, botonesWASD.y + botonE.height);
+            ctx.fillText(" ->  Para interactuar", canvas_width/2.2, botonE.y + botonesWASD.height/3);
+            ctx.font="25px VT323";
+            ctx.fillText("by: KSAplay", canvas_width/2.3, canvas_height - canvas_height/15);
         // Incluimos al personaje principal en el menu
         ctx.drawImage(personaje.imagen, personaje.x, personaje.y);
     } else {
@@ -583,24 +631,81 @@ function bucle(){
         }
 
         // Dibujamos la interfaz del juego cuando se está jugando
-        ctx.drawImage(botonReiniciar.imagen, botonReiniciar.x,botonReiniciar.y);    // Boton Reiniciar
-        
-        if(musica_muteada){
-            ctx.drawImage(botonMusicaMuteada.imagen, botonMusicaMuteada.x,botonMusicaMuteada.y);    // Boton Musica muteada
-        } else {
-            ctx.drawImage(botonMusica.imagen, botonMusica.x,botonMusica.y);     // Boton Musica sonando
+        if(!finDelJuego){
+            ctx.drawImage(botonReiniciar.imagen,botonReiniciar.x,botonReiniciar.y);  // Boton Reiniciar
+
+            if(musica_muteada){
+                ctx.drawImage(botonMusicaMuteada.imagen,botonMusicaMuteada.x,botonMusicaMuteada.y);  // Boton Musica muteada
+            } else {
+                ctx.drawImage(botonMusica.imagen,botonMusica.x,botonMusica.y);   // Boton Musica sonando
+            }
+            // Puntaje
+            ctx.fillStyle="#FEAE35"; //color de relleno
+            ctx.font="bold 35px VT323"; //estilo de texto
+            ctx.fillText("Puntaje:",50,50);
+            ctx.fillStyle="white";
+            // Dibujamos el puntaje de acuerdo a la cantidad de digitos
+            if(puntaje < 10){
+                ctx.fillText(puntaje,170,50);
+            } else if(puntaje < 100 && puntaje >= 10){
+                ctx.fillText(puntaje,172.5,50);
+            } else if(puntaje < 1000 && puntaje >= 100){
+                ctx.fillText(puntaje,175,50);
+            } else {
+                ctx.fillText(puntaje,177.5,50);
+            }
+            ctx.font="bold 50px VT323";
+            ctx.fillText(tiempo,canvas_width/2,50);
         }
-
-        // Puntaje
-        ctx.fillStyle="#FEAE35"; //color de relleno
-        ctx.font="bold 45px VT323"; //estilo de texto
-        ctx.fillText("Puntaje:",50,50);
-        ctx.fillStyle="white";
-        ctx.fillText(puntaje,215,50);
-
     }
 
 }
+// -------------- Funcion de Finalización --------------
+function juegoTerminado(){
+    finDelJuego = true;
+    clearInterval(update);
+    clearInterval(counterDown);
+    if(musica == 1) {
+        musica1.pause();
+        musica1.currentTime = 0;
+    } else if(musica == 2){
+        musica2.pause();
+        musica2.currentTime = 0;
+    } else {
+        musica3.pause();
+        musica3.currentTime = 0;
+    }
+    // Llamamos a la función
+    bucle();
+    // Dibujamos el panel Final con el puntaje adquirido
+    ctx.drawImage(panelFinal.imagen, canvas_width/2 - panelFinal.width/2, canvas_height/2 - panelFinal.height/2);
+    ctx.fillStyle="#BD4B2F"; //color de relleno
+    ctx.font="bold 30px VT323"; //estilo de texto
+    ctx.fillText("Puntaje Final:",canvas_width/2 - panelFinal.height/2, canvas_height/2 - botonesWASD.height/2);
+    ctx.font="50px VT323";
+    ctx.fillStyle="white";
+
+    if(puntaje < 10){
+        ctx.fillText(puntaje,canvas_width/2 - 10, canvas_height/2 + 5);
+    } else if(puntaje < 100 && puntaje >= 10){
+        ctx.fillText(puntaje,canvas_width/2 - 20, canvas_height/2 + 5);
+    } else if(puntaje < 1000 && puntaje >= 100){
+        ctx.fillText(puntaje,canvas_width/2 - 30, canvas_height/2 + 5);
+    } else {
+        ctx.fillText(puntaje,canvas_width/2 - 40, canvas_height/2 + 5);
+    }
+    // Dibujams ¡Nuevo Record! si el puntaje es más alto que el anterior
+    if(puntaje > puntajeAnterior){
+        puntajeAnterior = puntaje;
+        ctx.fillStyle="#FEAE35";
+        ctx.font="bold 35px VT323";
+        ctx.fillText("¡Nuevo Récord!",canvas_width/2 - panelFinal.height/1.8 - 5, canvas_height/2 - botonesWASD.height - 5);
+    }
+
+    ctx.drawImage(titulo.imagen, titulo.x, titulo.y);
+
+}
+
 // -------------------------------------------------------------------------------------------------------------------
 //                                       FUNCIONES DE CREACIÓN DE LOS ANIMALES
 // -------------------------------------------------------------------------------------------------------------------
@@ -1117,7 +1222,7 @@ function ovejasIA(){
             case 4: ovejas[numOveja].textoEstado = "💉"; break;   // Le toca su inyección
             case 5: ovejas[numOveja].textoEstado = "🍎"; break;   // Quiere una fruta
             case 6: ovejas[numOveja].textoEstado = "💤"; break;   // Tiene sueño
-            case 7: ovejas[numOveja].textoEstado = "🦠"; break;   // Está enfermo
+            case 7: ovejas[numOveja].textoEstado = "🤢"; break;   // Está enfermo
             case 8: ovejas[numOveja].textoEstado = "💧"; break;    // Tiene sed
         }
     }
@@ -1229,17 +1334,20 @@ function generarCesped(){
 }
 // Funcion de realizar clic
 function clicPantalla(evento){
+    interactuar = true;
     var clicX = evento.layerX;
     var clicY = evento.layerY;
-    console.log("Clic X: " + clicX + " - Y: "+clicY);
+    //console.log("Clic en: X: "+clicX + " - Y: "+clicY);
 
     // Boton reiniciar
-    if((clicX > 644 && clicX < 691) && (clicY > 660 && clicY < 713) && !menuPrincipal) {
+    if((clicX > (window_width - canvas_width)/2 + botonReiniciar.x && clicX < (window_width - canvas_width)/2 + botonReiniciar.x + botonReiniciar.width)
+        && (clicY > botonReiniciar.y && clicY < botonReiniciar.y + botonReiniciar.height) && !menuPrincipal && !finDelJuego) {
         reiniciarJuego();
         presionarBoton.play();
     }
     // Boton musica
-    if((clicX > 642 && clicX < 694) && (clicY > 9 && clicY < 57) && !menuPrincipal) {
+    if((clicX > (window_width - canvas_width)/2 + botonMusica.x && clicX < (window_width - canvas_width)/2 + botonMusica.x + botonMusica.width)
+        && (clicY > botonMusica.y && clicY < botonMusica.y + botonMusica.height) && !finDelJuego) {
         if(musica_muteada == false){
             if(musica == 1) {
                 musica1.pause();
@@ -1264,6 +1372,12 @@ function clicPantalla(evento){
         }
         presionarBoton.play();
     }
+    // Boton reintentar (Fin de juego)
+    if((clicX > (window_width/2 - panelFinal.width/2.5) && clicX < (window_width/2 + panelFinal.width/2.5))
+        && (clicY > (canvas_height/2 + panelFinal.height/3 - botonMusica.height/2) && clicY < (canvas_height/2 + panelFinal.height/3 + botonMusica.height/2)) && !menuPrincipal && finDelJuego) {
+        reiniciarJuego();
+        presionarBoton.play();
+    }
 }
 
 // Funcion de mover mouse, relacionado con la funcion de realizar clic (por las posiciones de los botones)
@@ -1272,11 +1386,18 @@ function movimientoMouse(evento){
     var posY = evento.layerY;
 
     // Boton reiniciar
-    if((posX > 644 && posX < 691) && (posY > 660 && posY < 713) && !menuPrincipal) {
+    if((posX > (window_width - canvas_width)/2 + botonReiniciar.x && posX < (window_width - canvas_width)/2 + botonReiniciar.x + botonReiniciar.width)
+        && (posY > botonReiniciar.y && posY < botonReiniciar.y + botonReiniciar.height) && !menuPrincipal && !finDelJuego) {
         cambiarPuntero("Mano");
     }
     // Boton musica
-    else if((posX > 642 && posX < 694) && (posY > 9 && posY < 57) && !menuPrincipal) {
+    else if((posX > (window_width - canvas_width)/2 + botonMusica.x && posX < (window_width - canvas_width)/2 + botonMusica.x + botonMusica.width)
+        && (posY > botonMusica.y && posY < botonMusica.y + botonMusica.height) && !finDelJuego) {
+        cambiarPuntero("Mano");
+    }
+    // Boton reintentar (Fin de juego)
+    else if((posX > (window_width/2 - panelFinal.width/2.5) && posX < (window_width/2 + panelFinal.width/2.5))
+        && (posY > (canvas_height/2 + panelFinal.height/3 - botonMusica.height/2) && posY < (canvas_height/2 + panelFinal.height/3 + botonMusica.height/2)) && !menuPrincipal && finDelJuego) {
         cambiarPuntero("Mano");
     } else {
         cambiarPuntero("Mouse");
@@ -1298,8 +1419,6 @@ function resize(){
     canvas.height = canvas_height;
 
     canvas.style.height = ""+window_height+"px";
-    console.log(canvas.width);
-    console.log(canvas.height);
 }
 
 // Cuando el mouse está dentro de un botón
@@ -1309,5 +1428,15 @@ function cambiarPuntero(tipoPuntero) {
         zona.style.cursor = "pointer";
     } else {
         zona.style.cursor = "default";
+    }
+}
+
+// Función para el timer de la duración del juego
+function timer(){
+    if(!menuPrincipal){
+        tiempo--;
+        if(tiempo == -1){
+            juegoTerminado();
+        }
     }
 }
